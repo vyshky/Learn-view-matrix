@@ -85,14 +85,22 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     cameraFront = glm::normalize(front);
 }
 
-int main() {
+int main2() {
     glfwInit();
+    // Создаем окно 800x600
     GLFWwindow* window = glfwCreateWindow(800, 600, "3D Cube", NULL, NULL);
+
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
+	// колбек, при изменении размеров окна, будет обновлятся и размер отрисовки
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int w, int h) {
+        // Отвечает за то, чтобы отрисовывалось только по заданным размерам окна
+        glViewport(0, 0, w, h);
+        });
+
     glfwMakeContextCurrent(window);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
