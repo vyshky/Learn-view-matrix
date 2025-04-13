@@ -5,11 +5,20 @@
 // разрешение окна
 const GLuint WIDTH = 800, HEIGHT = 600;
 
-// triangle_coords - это массив координат вершин треугольника 
-GLfloat triangle_coords[] = {
-	-0.5f,  -0.5f, 0.0f, // left
-	 0.5f,  -0.5f, 0.0f, // right
-	 0.0f,   0.5f, 0.0f, // top
+// quadrate_coords - это массив координат вершин квадрата 
+GLfloat quadrate_coords[] = {
+	 0.5f,  0.5f, 0.0f,  // Верхний правый угол
+	 0.5f, -0.5f, 0.0f,  // Нижний правый угол
+	-0.5f, -0.5f, 0.0f,  // Нижний левый угол
+	-0.5f,  0.5f, 0.0f   // Верхний левый угол
+};
+
+// Index строки, берет 3 точки из этой строки из quadrate_coords
+GLuint indices[] = {
+	2,1,0,
+	3,2,0
+	//0, 1, 3,   // Первый треугольник
+	//1, 2, 3    // Второй треугольник	
 };
 
 // shader_traingle - это встроенная переменная, которая определяет положение вершин в пространстве, это результат работы шейдера
@@ -104,22 +113,37 @@ int main() {
 	///////////////////////////КОНЕЦ_ШЕЙДЕРЫ//////////////////////////////////
 
 	////////////////////////////НАЧАЛО_БУФЕРЫ/////////////////////////////////////////
-	// vbo - это буфер вершин, который хранит координаты вершин
-	// vao - это объект вершинного массива, который хранит указатели на буфер вершин
-	GLuint VBO, VAO;
+	// vbo(vertex buffer object) - это буфер вершин, который хранит координаты вершин
+	// vao(vertex array object) - это объект вершинного массива, который хранит указатели на буфер вершин
+	// ebo(element buffer objects) - это буфер индексов, который хранит индексы вершин, нужен для рисования квадратов
+	GLuint VBO, VAO, EBO;
+
+
+
 
 	// Создает объект вершинного массива, который хранит указатели на буферы вершин
 	glGenVertexArrays(1, &VAO);
-	// Привязывает VAO к вершинному массиву, то есть к массиву из контекста OpenGL
-	glBindVertexArray(VAO);
-
 	// Создается в памяти видеокарты, но пока не привязан к контексту OpenGL
 	glGenBuffers(1, &VBO);
-	// glBindBuffer - это функция, которая привязывает буфер вершин к текущему контексту OpenGL
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	// Создается в памяти видеокарты, но пока не привязан к контексту OpenGL
+	glGenBuffers(1, &EBO);
 
-	// Заполняет буффер VBO в видеокарте данными из массива triangle_coords
-	glBufferData(GL_ARRAY_BUFFER, sizeof(triangle_coords), triangle_coords, GL_STATIC_DRAW);
+
+
+	// glBindBuffer - это функция, которая привязывает буфер вершин к текущему контексту OpenGL
+	glBindVertexArray(VAO);
+
+	// Копирование координат квадрата в VBO
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadrate_coords), quadrate_coords, GL_STATIC_DRAW);
+
+	// Копирование вершин в EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+
+	
+	// Копирование. Заполняет буффер VBO в видеокарте данными из массива triangle_coords
 	//настраивает, как OpenGL должен интерпретировать данные вершин в массиве байт, которые хранятся в буфере (VBO)
 	// 0 - index аттрибута в контексте Opengl. Связан с аттрибутом position в шейдере
 	// 3 - это количество координат, которые мы передаем в шейдер
@@ -133,6 +157,10 @@ int main() {
 	// Отвязка массива VAO
 	glBindVertexArray(0);
 	////////////////////////////КОНЕЦ_БУФЕРЫ/////////////////////////////////////////
+	
+	// Рисовать в режиме полигонов
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	// Игровой цикл
 	while (!glfwWindowShouldClose(window))
 	{
@@ -140,15 +168,13 @@ int main() {
 		glfwPollEvents();
 
 		// Отчистить цветовой буфер
-		//glClearColor(0.5f, 0.5f, 1.0f, 1.0f);
-		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// Рисовать фигуру
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
 		// Меня буфер экрана на следующий кадр, всего 2 буфера, которые отрисовываются друг за другом
