@@ -136,6 +136,9 @@
     <ClCompile Include="cube3D.cpp" />
     <ClCompile Include="MyCube3D.cpp" />
     <ClCompile Include="MyCube3D_2.cpp" />
+    <ClCompile Include="shader2.cpp" />
+    <ClCompile Include="Shader3.cpp" />
+    <ClCompile Include="Shader4OOP.cpp" />
     <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>

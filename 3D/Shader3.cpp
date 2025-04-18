@@ -2,15 +2,70 @@
 //#include <GL/glew.h>
 //#include <GLFW/glfw3.h>
 //
+//// ГАЙД:
+//// У нас есть массив координат и цвета
+//// с помощью glVertexAttribPointer мы задаем куда записывать координаты, а куда цвет через index 1 и 0
+//// Далее, когда вызывается 6 float, то первые 3 записываются в position, а другие в color
+//// Вершинам присваивается цвет заданный в последних 3 байтах
+//// 
+//// Порядок вызова шейдеров
+////  1.Vertex
+////  2.Geometry
+////  3.Fragment
+//
+//
+////** Полный цикл отрисовки : **
+////
+////1. * *Вершинный шейдер : **
+////*Выполняется для каждой вершины треугольника.
+////* Получает на вход атрибуты вершины(позиция, цвет, текстурные координаты и т.д.).
+////* Выполняет необходимые вычисления и передает результаты дальше.
+////2. * *Сборка примитивов : **
+////*GPU собирает вершины в примитивы(треугольники, линии, точки).
+////* Определяет, какие вершины принадлежат одному примитиву.
+////3. * *Растеризация : **
+////*GPU преобразует примитивы в пиксели(фрагменты) на экране.
+////* Определяет, какие пиксели покрываются примитивом.
+////* Генерирует фрагменты для каждого пикселя, который покрывается примитивом.
+////4. * *Интерполяция атрибутов : **
+////*GPU интерполирует атрибуты(цвет, текстурные координаты и т.д.) для каждого фрагмента.
+////* Использует значения атрибутов вершин и рассчитывает значения атрибутов для каждого фрагмента.
+////5. * *Фрагментный шейдер : **
+////*Выполняется для каждого фрагмента.
+////* Получает на вход интерполированные атрибуты(цвет, текстурные координаты и т.д.).
+////* Выполняет необходимые вычисления и определяет окончательный цвет фрагмента.
+////6. * *Тестирование : **
+////*GPU выполняет тестирование фрагментов(например, тест глубины, тест прозрачности).
+////* Проверяет, должен ли фрагмент быть закрашен или нет.
+////7. * *Смешивание : **
+////*GPU выполняет смешивание цвета фрагмента с цветом фона(если необходимо).
+////* Объединяет цвета фрагмента и фона для создания окончательного цвета.
+////8. * *Закрашивание пикселей : **
+////*GPU записывает окончательный цвет фрагмента в буфер кадра.
+////* Буфер кадра — это область памяти, где хранится изображение, которое будет отображено на экране.
+////
+////** В целом : **
+////
+////Полный цикл отрисовки включает в себя несколько этапов, начиная от вершинного шейдера и заканчивая закрашиванием пикселей.Каждый этап играет важную роль в создании реалистичной и привлекательной графики.
+//
+////
+////1.Интерполяция цвета
+////2.Фрагментный шейдер
+////3.Тестирование(тест глубины, тест прозрачности и т.д.)
+////4.Смешивание(если необходимо)
+////5.Закрашивание пикселей(запись цвета пикселя в буфер кадра)
+//
+//
+//
 //// разрешение окна
 //const GLuint WIDTH = 800, HEIGHT = 600;
 //
 //// quadrate_coords - это массив координат вершин квадрата 
 //GLfloat quadrate_coords_first[] = {
-//	// First triangle
-//	-0.5f, -0.5f, 0.0f,  // Left 
-//	0.5f, -0.5f, 0.0f,  // Right
-//	0.0f, 0.5f, 0.0f,  // Top 
+//	// КООРДИНАТЫ            // ЦВЕТ
+//	-0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // Нижний правый угол
+//	0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,  // Нижний левый угол
+//	0.0f, 0.5f, 0.0f,     0.0f, 0.0f, 1.0f,  // Верхний угол
 //};
 //
 //
@@ -19,27 +74,25 @@
 //const GLchar* shader_traingle = R"(
 //#version 330 core
 //layout(location = 0) in vec3 position;
-//out vec4 vertexColor;
+//layout(location = 1) in vec3 color;
+//out vec3 ourColor;
 //void main()
 //{
-//   gl_Position = vec4(position.x, position.y, position.z, 1.0);
-//   //vertexColor = gl_Position;
-//   vertexColor = vec4(0.5f, 0.0f, 0.0f, 1.0f);
+//   gl_Position = vec4(position, 1.0);
+//   ourColor = color;
 //}
 //)";
 //
 //
 //// fragmet shaders
 //// shader_color - это встроенная переменная, которая определяет цвет вершин в пространстве, это результат работы шейдера
-//const GLchar* shader_color_first = R"(
+//const GLchar* shader_color = R"(
 //#version 330 core
-//in vec4 vertexColor; 
+//in vec3 ourColor;  // Мы устанавливаем значение этой переменной в коде OpenGL.
 //out vec4 color;
 //void main()
 //{
-//	color = vertexColor;
-//	//color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-//	//color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+//	color = vec4(ourColor,1.0f);
 //})";
 //
 //int main() {
@@ -93,25 +146,26 @@
 //
 //	// Шейдер1
 //	// Создание фрагментного шейдера orange
-//	GLuint fragmentShader_orange = glCreateShader(GL_FRAGMENT_SHADER);
-//	glShaderSource(fragmentShader_orange, 1, &shader_color_first, NULL);
-//	glCompileShader(fragmentShader_orange);
+//	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+//	glShaderSource(fragmentShader, 1, &shader_color, NULL);
+//	glCompileShader(fragmentShader);
+//
 //	// Ссылка на шейдеры, к ней привязываются шейдеры
-//	GLuint shaderProgram_orange = glCreateProgram();
-//	glAttachShader(shaderProgram_orange, vertexShader);
-//	glAttachShader(shaderProgram_orange, fragmentShader_orange);
-//	glLinkProgram(shaderProgram_orange);
+//	GLuint shaderProgram = glCreateProgram();
+//	glAttachShader(shaderProgram, vertexShader);
+//	glAttachShader(shaderProgram, fragmentShader);
+//	glLinkProgram(shaderProgram);
 //
 //	// Проверка на ошибки компиляции
-//	glGetProgramiv(shaderProgram_orange, GL_LINK_STATUS, &success);
+//	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 //	if (!success) {
-//		glGetProgramInfoLog(shaderProgram_orange, 512, NULL, infoLog);
+//		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
 //		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
 //	}
 //
 //	// Удаление шейдеров, они больше не нужны
 //	glDeleteShader(vertexShader);
-//	glDeleteShader(fragmentShader_orange);
+//	glDeleteShader(fragmentShader);
 //	///////////////////////////КОНЕЦ_ШЕЙДЕРЫ//////////////////////////////////
 //
 //	////////////////////////////НАЧАЛО_БУФЕРЫ/////////////////////////////////////////
@@ -132,24 +186,26 @@
 //	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 //	glBufferData(GL_ARRAY_BUFFER, sizeof(quadrate_coords_first), quadrate_coords_first, GL_STATIC_DRAW);
 //
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-//	// Активируем аттирибут, который мы настроили выше под индексом 0
-//	glEnableVertexAttribArray(0);
-//	glBindBuffer(GL_ARRAY_BUFFER, 0);
-//	glBindVertexArray(0);
-//
-//
 //	// Копирование. Заполняет буффер VBO в видеокарте данными из массива triangle_coords
 //	// настраивает, как OpenGL должен интерпретировать данные вершин в массиве байт, которые хранятся в буфере (VBO)
 //	// 0 - index аттрибута в контексте Opengl. Связан с аттрибутом position в шейдере
 //	// 3 - это количество координат, которые мы передаем в шейдер
 //	// GL_FLOAT - это тип данных, которые мы передаем в шейдер
 //	// 3* sizeof(GLfloat) - это размер данных, которые мы передаем в шейдер
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 //	// Активируем аттирибут, который мы настроили выше под индексом 0
 //	glEnableVertexAttribArray(0);
+//
+//
+//
+//	// ЦВЕТ
+//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+//	glEnableVertexAttribArray(1);
+//	
+//
+//
 //	// Отвыязываем буффер VBO
-//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+//	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 //	// Отвязка массива VAO
 //	glBindVertexArray(0);
 //	////////////////////////////КОНЕЦ_БУФЕРЫ/////////////////////////////////////////
@@ -160,28 +216,21 @@
 //	// Игровой цикл
 //	while (!glfwWindowShouldClose(window))
 //	{
-//		// Проверяет были ли вызваны какие либо события (вроде ввода с клавиатуры или перемещение мыши)
+//		// Обрабатываем события
 //		glfwPollEvents();
 //
-//		// Отчистить цветовой буфер
+//		// Отрисовка
+//		// Очищаем буфер цвета
 //		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 //		glClear(GL_COLOR_BUFFER_BIT);
 //
-//		// Рисовать фигуру 1
-//		// Устанавливаем шейдер, который мы создали выше
-//		glUseProgram(shaderProgram_orange);
-//		glBindVertexArray(VAO);
-//		// 6 это количество индексов из indices
-//		// GL_UNSIGNED_INT - это тип данных индексов из indices
-//		// 0 - это смещение в буфере индексов, то есть с начала
-//		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+//		// Активируем шейдерную программу
+//		glUseProgram(shaderProgram);
 //
-//		// первый аргумент - это тип примитива, который мы хотим нарисовать
-//		// Второй аргумент это индекс элемнта из координат с которой мы начинаем рисовать
-//		// Третий аргумент это количество вершин, которые мы хотим нарисовать, то есть 3, значит 1 треугольник
+//		// рисуем треугольник
+//		glBindVertexArray(VAO);
 //		glDrawArrays(GL_TRIANGLES, 0, 3);
 //		glBindVertexArray(0);
-//
 //
 //		// Меня буфер экрана на следующий кадр, всего 2 буфера, которые отрисовываются друг за другом
 //		glfwSwapBuffers(window);

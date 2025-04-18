@@ -33,11 +33,12 @@
 //// shader_color - это встроенная переменная, которая определяет цвет вершин в пространстве, это результат работы шейдера
 //const GLchar* shader_color_first = R"(
 //#version 330 core
-//in vec4 vertexColor; 
+////in vec4 vertexColor; 
+//uniform vec4 ourColor;  // Мы устанавливаем значение этой переменной в коде OpenGL.
 //out vec4 color;
 //void main()
 //{
-//	color = vertexColor;
+//	color = ourColor;
 //	//color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
 //	//color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 //})";
@@ -160,28 +161,29 @@
 //	// Игровой цикл
 //	while (!glfwWindowShouldClose(window))
 //	{
-//		// Проверяет были ли вызваны какие либо события (вроде ввода с клавиатуры или перемещение мыши)
+//		// Обрабатываем события
 //		glfwPollEvents();
 //
-//		// Отчистить цветовой буфер
+//		// Отрисовка
+//		// Очищаем буфер цвета
 //		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 //		glClear(GL_COLOR_BUFFER_BIT);
 //
-//		// Рисовать фигуру 1
-//		// Устанавливаем шейдер, который мы создали выше
+//		// Активируем шейдерную программу
 //		glUseProgram(shaderProgram_orange);
-//		glBindVertexArray(VAO);
-//		// 6 это количество индексов из indices
-//		// GL_UNSIGNED_INT - это тип данных индексов из indices
-//		// 0 - это смещение в буфере индексов, то есть с начала
-//		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 //
-//		// первый аргумент - это тип примитива, который мы хотим нарисовать
-//		// Второй аргумент это индекс элемнта из координат с которой мы начинаем рисовать
-//		// Третий аргумент это количество вершин, которые мы хотим нарисовать, то есть 3, значит 1 треугольник
+//		// Обновляем цвет формы
+//		GLfloat timeValue = glfwGetTime();
+//		GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
+//		GLfloat redValue = (sin(timeValue * 2) / 2) + 0.5;
+//		GLfloat blueValue = (sin(timeValue * 3) / 2) + 0.5;
+//		GLint vertexColorLocation = glGetUniformLocation(shaderProgram_orange, "ourColor");
+//		glUniform4f(vertexColorLocation, redValue, greenValue, blueValue, 1.0f);
+//		
+//		// рисуем треугольник
+//		glBindVertexArray(VAO);
 //		glDrawArrays(GL_TRIANGLES, 0, 3);
 //		glBindVertexArray(0);
-//
 //
 //		// Меня буфер экрана на следующий кадр, всего 2 буфера, которые отрисовываются друг за другом
 //		glfwSwapBuffers(window);
