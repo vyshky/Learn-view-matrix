@@ -6,20 +6,27 @@
 //const GLuint WIDTH = 800, HEIGHT = 600;
 //
 //// quadrate_coords - это массив координат вершин квадрата 
-//GLfloat quadrate_coords[] = {
-//	 0.5f,  0.5f, 0.0f,  // Верхний правый угол
-//	 0.5f, -0.5f, 0.0f,  // Нижний правый угол
-//	-0.5f, -0.5f, 0.0f,  // Нижний левый угол
-//	-0.5f,  0.5f, 0.0f   // Верхний левый угол
+//GLfloat quadrate_coords_first[] = {
+//	// First triangle
+//	-0.9f, -0.5f, 0.0f,  // Left 
+//	-0.0f, -0.5f, 0.0f,  // Right
+//	-0.45f, 0.5f, 0.0f,  // Top 
+//};
+//
+//// quadrate_coords - это массив координат вершин квадрата 
+//GLfloat quadrate_coords_second[] = {
+//		 0.0f, -0.5f, 0.0f,  // Left
+//		 0.9f, -0.5f, 0.0f,  // Right
+//		 0.45f, 0.5f, 0.0f   // Top 
 //};
 //
 //// Index строки, берет 3 точки из этой строки из quadrate_coords
-//GLuint indices[] = {
-//	2,1,0,
-//	3,2,0
-//	//0, 1, 3,   // Первый треугольник
-//	//1, 2, 3    // Второй треугольник	
-//};
+////GLuint indices[] = {
+////	2,1,0,
+////	3,2,0
+////	//0, 1, 3,   // Первый треугольник
+////	//1, 2, 3    // Второй треугольник	
+////};
 //
 //// shader_traingle - это встроенная переменная, которая определяет положение вершин в пространстве, это результат работы шейдера
 //const GLchar* shader_traingle = R"(
@@ -36,8 +43,8 @@
 //out vec4 color;
 //void main()
 //{
-//	color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-//	//color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+//	//color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+//	color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 //})";
 //
 //int main() {
@@ -89,6 +96,7 @@
 //		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
 //		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
 //	}
+//
 //	// Создание фрагментного шейдера
 //	GLuint fragmentShader;
 //	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -116,35 +124,41 @@
 //	// vbo(vertex buffer object) - это буфер вершин, который хранит координаты вершин
 //	// vao(vertex array object) - это объект вершинного массива, который хранит указатели на буфер вершин
 //	// ebo(element buffer objects) - это буфер индексов, который хранит индексы вершин, нужен для рисования квадратов
-//	GLuint VBO, VAO, EBO;
+//	GLuint VBO[2], VAO[2];
 //
-//
-//
+//	// first quadrate
 //
 //	// Создает объект вершинного массива, который хранит указатели на буферы вершин
-//	glGenVertexArrays(1, &VAO);
+//	glGenVertexArrays(1, &VAO[0]);
 //	// Создается в памяти видеокарты, но пока не привязан к контексту OpenGL
-//	glGenBuffers(1, &VBO);
+//	glGenBuffers(1, &VBO[0]);
 //	// Создается в памяти видеокарты, но пока не привязан к контексту OpenGL
-//	glGenBuffers(1, &EBO);
-//
-//
-//
 //	// glBindBuffer - это функция, которая привязывает буфер вершин к текущему контексту OpenGL
-//	glBindVertexArray(VAO);
-//
+//	glBindVertexArray(VAO[0]);
 //	// Копирование координат квадрата в VBO
-//	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-//	glBufferData(GL_ARRAY_BUFFER, sizeof(quadrate_coords), quadrate_coords, GL_STATIC_DRAW);
+//	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+//	glBufferData(GL_ARRAY_BUFFER, sizeof(quadrate_coords_first), quadrate_coords_first, GL_STATIC_DRAW);
 //
-//	// Копирование вершин в EBO
-//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+//	// Активируем аттирибут, который мы настроили выше под индексом 0
+//	glEnableVertexAttribArray(0);
+//	glBindBuffer(GL_ARRAY_BUFFER, 0);
+//	glBindVertexArray(0);
 //
 //
-//	
+//	// Second quadrate
+//	//Generate
+//	glGenVertexArrays(1, &VAO[1]);
+//	glGenBuffers(1, &VBO[1]);
+//	//bind
+//	glBindVertexArray(VAO[1]);
+//	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+//	//copy
+//	glBufferData(GL_ARRAY_BUFFER, sizeof(quadrate_coords_second), quadrate_coords_second, GL_STATIC_DRAW);
+//
+//
 //	// Копирование. Заполняет буффер VBO в видеокарте данными из массива triangle_coords
-//	//настраивает, как OpenGL должен интерпретировать данные вершин в массиве байт, которые хранятся в буфере (VBO)
+//	// настраивает, как OpenGL должен интерпретировать данные вершин в массиве байт, которые хранятся в буфере (VBO)
 //	// 0 - index аттрибута в контексте Opengl. Связан с аттрибутом position в шейдере
 //	// 3 - это количество координат, которые мы передаем в шейдер
 //	// GL_FLOAT - это тип данных, которые мы передаем в шейдер
@@ -157,7 +171,7 @@
 //	// Отвязка массива VAO
 //	glBindVertexArray(0);
 //	////////////////////////////КОНЕЦ_БУФЕРЫ/////////////////////////////////////////
-//	
+//
 //	// Рисовать в режиме полигонов
 //	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 //
@@ -171,16 +185,35 @@
 //		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 //		glClear(GL_COLOR_BUFFER_BIT);
 //
-//		// Рисовать фигуру
+//		// Устанавливаем шейдер, который мы создали выше
 //		glUseProgram(shaderProgram);
-//		glBindVertexArray(VAO);
-//		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+//
+//		// Рисовать фигуру 1
+//		glBindVertexArray(VAO[0]);
+//		// 6 это количество индексов из indices
+//		// GL_UNSIGNED_INT - это тип данных индексов из indices
+//		// 0 - это смещение в буфере индексов, то есть с начала
+//		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+//
+//		// первый аргумент - это тип примитива, который мы хотим нарисовать
+//		// Второй аргумент это индекс элемнта из координат с которой мы начинаем рисовать
+//		// Третий аргумент это количество вершин, которые мы хотим нарисовать, то есть 3, значит 1 треугольник
+//		glDrawArrays(GL_TRIANGLES, 0, 3);
+//		glBindVertexArray(0);
+//
+//		// Рисовать фигуру 2
+//		glBindVertexArray(VAO[1]);
+//		glDrawArrays(GL_TRIANGLES, 0, 3);
+//
+//		// Отвязка VAO
 //		glBindVertexArray(0);
 //
 //		// Меня буфер экрана на следующий кадр, всего 2 буфера, которые отрисовываются друг за другом
 //		glfwSwapBuffers(window);
 //	}
-//
+//	// Properly de-allocate all resources once they've outlived their purpose
+//	glDeleteVertexArrays(2, VAO);
+//	glDeleteBuffers(2, VBO);
 //	glfwTerminate();
 //	return 0;
 //}

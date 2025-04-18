@@ -130,9 +130,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="2d_dz1.cpp" />
+    <ClCompile Include="2d_dz2.cpp" />
+    <ClCompile Include="2d_dz3.cpp" />
     <ClCompile Include="cube3D.cpp" />
     <ClCompile Include="MyCube3D.cpp" />
     <ClCompile Include="MyCube3D_2.cpp" />
+    <ClCompile Include="Shaders.cpp" />
+    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
